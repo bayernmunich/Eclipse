@@ -11,7 +11,10 @@ if [[ !("$#" -eq 3) ]];
     exit 1
 fi
 
-
+### Get parameters
+username=$1
+azureregion=$2
+branch=$3
 
 ################################################################
 # Section 1 - Install Apps and Files
