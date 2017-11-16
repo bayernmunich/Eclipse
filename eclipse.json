@@ -1,0 +1,135 @@
+Skip to content
+This repository
+Search
+Pull requests
+Issues
+Marketplace
+Explore
+ @bayernmunich
+ Sign out
+ Watch 0
+  Star 0  Fork 10 bayernmunich/java-dev-vsts
+forked from nwcadence/java-dev-vsts
+ Code  Pull requests 0  Projects 0  Wiki  Insights  Settings
+java-dev-vsts/env/ 
+JavaDevVSTS.json
+   or cancel
+    
+ Edit file    Preview changes
+1
+{
+2
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+3
+    "contentVersion": "1.0.0.0",
+4
+    "parameters": {
+5
+        "vmDnsNameForPublicIP": {
+6
+            "type": "string",
+7
+            "metadata": {
+8
+                "description": "Globally unique DNS Name for the Public IP used to access the Java Dev Virtual Machine."
+9
+            }
+10
+        },
+11
+        "adminUsername": {
+12
+            "type": "string",
+13
+            "defaultValue": "vmadmin",
+14
+            "metadata": {
+15
+                "description": "Username for the account to be provisioned." 
+16
+            }
+17
+        },
+18
+        "adminPassword": {
+19
+            "type": "securestring",
+20
+            "metadata": {
+21
+                "description": "Password for the account to be provisioned." 
+22
+            }
+23
+        },
+24
+        "acceptLicenseTerms": {
+25
+            "type": "string",
+26
+            "allowedValues": ["Yes"],
+27
+            "metadata": {
+28
+                "description": "Do you accept license terms of all software installed as part of the provisioning script?" 
+29
+            }
+30
+        },
+31
+        "virtualMachineSize": {
+32
+            "type": "string",
+33
+            "defaultValue": "Standard_D2_v2",
+34
+            "metadata": {
+35
+                "description": "Size of the Virtual Machine to create." 
+36
+            }
+37
+        },
+38
+        "branch": {
+39
+            "type": "string",
+40
+            "defaultValue": "master",
+41
+            "metadata": {
+42
+                "description": "Branch override parameter to allow for easy testing and validation of provisioning script changes." 
+43
+            }
+44
+        }
+45
+    },
+46
+    "variables": {
+47
+        "virtualMachineName": "[toLower(parameters('vmDnsNameForPublicIP'))]",
+48
+        "virtualMachineOsDiskName": "[concat(variables('virtualMachineName'),'-disk-os')]",
+@bayernmunich
+Commit changes
+
+Update JavaDevVSTS.json
+
+Add an optional extended description…
+  Commit directly to the master branch.
+  Create a new branch for this commit and start a pull request. Learn more about pull requests.
+Commit changes  Cancel
+© 2017 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+API
+Training
+Shop
+Blog
+About
