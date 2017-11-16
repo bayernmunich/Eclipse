@@ -47,7 +47,7 @@ apt-get install xrdp -y
 apt-get install gnome-terminal -y
 
 cd /mnt
-git clone https://github.com/nwcadence/java-dev-vsts.git
+git clone https://github.com/bayernmunich/Eclipse.git
 
 cd /mnt/java-dev-vsts
 git checkout $branch
