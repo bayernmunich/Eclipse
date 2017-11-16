@@ -1,135 +1,226 @@
-Skip to content
-This repository
-Search
-Pull requests
-Issues
-Marketplace
-Explore
- @bayernmunich
- Sign out
- Watch 0
-  Star 0  Fork 10 bayernmunich/java-dev-vsts
-forked from nwcadence/java-dev-vsts
- Code  Pull requests 0  Projects 0  Wiki  Insights  Settings
-java-dev-vsts/env/ 
-JavaDevVSTS.json
-   or cancel
-    
- Edit file    Preview changes
-1
 {
-2
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-3
     "contentVersion": "1.0.0.0",
-4
     "parameters": {
-5
         "vmDnsNameForPublicIP": {
-6
             "type": "string",
-7
             "metadata": {
-8
                 "description": "Globally unique DNS Name for the Public IP used to access the Java Dev Virtual Machine."
-9
             }
-10
         },
-11
         "adminUsername": {
-12
             "type": "string",
-13
             "defaultValue": "vmadmin",
-14
             "metadata": {
-15
                 "description": "Username for the account to be provisioned." 
-16
             }
-17
         },
-18
         "adminPassword": {
-19
             "type": "securestring",
-20
             "metadata": {
-21
                 "description": "Password for the account to be provisioned." 
-22
             }
-23
         },
-24
         "acceptLicenseTerms": {
-25
             "type": "string",
-26
             "allowedValues": ["Yes"],
-27
             "metadata": {
-28
                 "description": "Do you accept license terms of all software installed as part of the provisioning script?" 
-29
             }
-30
         },
-31
         "virtualMachineSize": {
-32
             "type": "string",
-33
             "defaultValue": "Standard_D2_v2",
-34
             "metadata": {
-35
                 "description": "Size of the Virtual Machine to create." 
-36
             }
-37
         },
-38
         "branch": {
-39
             "type": "string",
-40
             "defaultValue": "master",
-41
             "metadata": {
-42
                 "description": "Branch override parameter to allow for easy testing and validation of provisioning script changes." 
-43
             }
-44
         }
-45
     },
-46
     "variables": {
-47
         "virtualMachineName": "[toLower(parameters('vmDnsNameForPublicIP'))]",
-48
         "virtualMachineOsDiskName": "[concat(variables('virtualMachineName'),'-disk-os')]",
-@bayernmunich
-Commit changes
-
-Update JavaDevVSTS.json
-
-Add an optional extended description…
-  Commit directly to the master branch.
-  Create a new branch for this commit and start a pull request. Learn more about pull requests.
-Commit changes  Cancel
-© 2017 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Help
-Contact GitHub
-API
-Training
-Shop
-Blog
-About
+        "virtualNetworkName": "[concat(variables('virtualMachineName'),'-vnet')]",
+        "networkInterfaceName": "[concat(variables('virtualMachineName'),'-nic')]",
+        "networkSecurityGroupName": "[concat(variables('virtualMachineName'),'-nsg')]",
+        "publicIPAddressName": "[concat(variables('virtualMachineName'),'-ip')]",
+        "publicIPAddressType": "Dynamic",
+        "addressPrefix": "10.0.0.0/16",
+        "subnetName": "Subnet",
+        "subnetPrefix": "10.0.0.0/24",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+        "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+    },
+    "resources": [
+        {
+            "name": "[variables('virtualMachineName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2016-04-30-preview",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
+            ],
+            "properties": {
+                "osProfile": {
+                    "computerName": "[variables('virtualMachineName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "16.04-LTS",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "name": "[variables('virtualMachineOsDiskName')]",
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS"
+                        }
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "[variables('virtualNetworkName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2016-12-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('addressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetPrefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[variables('networkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+                "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]",
+                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "10.0.0.4",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+                }
+            }
+        },
+        {
+            "name": "[variables('publicIpAddressName')]",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIpAllocationMethod": "[variables('publicIpAddressType')]",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('vmDnsNameForPublicIP')]"
+                }
+            }
+        },
+        {
+            "name": "[variables('networkSecurityGroupName')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allow-ssh",
+                        "properties": {
+                            "priority": 1000,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "allow-rdp",
+                            "properties": {
+                                "description": "RDP port",
+                                "protocol": "Tcp",
+                                "sourcePortRange": "*",
+                                "destinationPortRange": "3389",
+                                "sourceAddressPrefix": "*",
+                                "destinationAddressPrefix": "*",
+                                "access": "Allow",
+                                "priority": 1100,
+                                "direction": "Inbound"
+                            }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[concat(variables('virtualMachineName'),'/configure-java-vm')]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', variables('virtualMachineName'))]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+            "settings": {
+                "fileUris": [
+                    "[concat('https://raw.githubusercontent.com/nwcadence/java-dev-vsts/', parameters('branch'), '/env/configure-java-vm.sh')]"
+                ],
+                "commandToExecute": "[concat('bash configure-java-vm.sh ', parameters('adminUsername'), ' ', resourceGroup().location, ' ', parameters('branch'))]"
+            }
+            }
+        }
+    ]
+}
