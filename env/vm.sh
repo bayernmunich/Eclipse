@@ -32,7 +32,7 @@ apt-get update
 apt-get install ubuntu-make -y
 
 ### Install Eclipse
-sudo -u $username umake ide eclipse /home/$username/.local/share/umake/ide/eclipse
+sudo -u $username umake ide eclipse-jee /home/$username/.local/share/umake/ide/eclipse
 
 
 
